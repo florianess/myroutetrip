@@ -1,0 +1,33 @@
+body {
+  margin: 0;
+}
+
+.center_circle {
+  justify-content: center;
+  display: flex;
+  padding-top: 2em;
+}
+
+.app {
+  display: grid;
+  grid-template-areas: 
+      "top"
+      "main";
+  grid-template-rows: 7vh 93vh;
+}
+
+.main {
+  grid-area: main;
+}
+
+.top {
+  grid-area: top;
+}
+
+.title {
+  margin: 1em;
+}
+
+.login {
+  right: 0;
+}
