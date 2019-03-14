@@ -1,18 +1,12 @@
-import React, { Component } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography,
-  Avatar,
-  Menu,
-  MenuItem
-} from '@material-ui/core';
-import { Link } from 'react-router-dom';
+import React from 'react';
+
 import { ApolloProvider } from "react-apollo";
 import ApolloClient from "apollo-boost";
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core';
 
 import './App.scss';
 import Switch from './components/Switch';
+import Header from './components/Header'
 
 const client = token => {
   return new ApolloClient({
@@ -23,88 +17,28 @@ const client = token => {
   });
 }
 
-const requestBody = idToken => ({
-  query: `
-    query {
-      logOrSign(idToken: "${idToken}")
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: "#FFA800"
+    },
+    secondary: {
+      main: "#19FF8B"
     }
-  `
+  }
 })
 
-class App extends Component {
+export default function App() {
+  const token = window.localStorage.getItem("token");
 
-  state = { isLog: false, openMenu: false }
-
-  componentDidMount = () => {
-    this.renderSignIn() 
-  }
-
-  renderSignIn = () => {
-    window.gapi.signin2.render('g-signin2', {
-      onsuccess: this.onSignIn
-    });
-  }
-
-  onSignIn = async (googleUser) => {
-    var profile = googleUser.getBasicProfile();
-    const idToken = googleUser.getAuthResponse().id_token
-    console.log(idToken); // This is null if the 'email' scope is not present.
-    this.setState({
-      isLog: true,
-      photo: profile.getImageUrl(),
-      name: profile.getName()
-    })
-    const res = await fetch('http://localhost:3001/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody(idToken)),
-      headers: { "Content-Type": "application/json" }
-    });
-    const body = await res.json();
-    console.log(body)
-    window.localStorage.setItem("token", body.data.logOrSign)
-  }
-
-  onLogOut = () => {
-    window.gapi.auth2.getAuthInstance().signOut().then(() => {
-      this.setState({ isLog: false, anchorEl: null });
-      this.renderSignIn();
-    });
-    window.localStorage.removeItem("token")
-  }
-  
-  render() {
-    const { isLog, photo, name, anchorEl } = this.state;
-
-    const token = window.localStorage.getItem("token");
-
-    return (
-      <ApolloProvider client={client(token)}>
-        <div className='app'>
-          <div className="top">
-            <AppBar position="static">
-              <Toolbar>
-                <Typography variant="title" color="inherit" style={{ flex: 1 }}>
-                  <Link to='/' style={{ textDecoration: 'none', color:'white'}}>
-                    My Route Trip
-                  </Link>
-                </Typography>
-                <div>
-                  { isLog ?
-                    <Avatar alt={name} src={photo} onClick={(e) => this.setState({ anchorEl: e.currentTarget })} style={{ cursor: 'pointer' }}/> :
-                    <div id="g-signin2"/>
-                  }
-                </div> 
-              </Toolbar>
-            </AppBar>
-          </div>
-          <div className='main'><Switch/></div>
-          <Menu open={Boolean(anchorEl)} onClose={() => this.setState({ anchorEl: null })} anchorEl={anchorEl}>
-            <MenuItem onClick={() => this.onLogOut()}>Log out</MenuItem>
-          </Menu>
-        </div>
-      </ApolloProvider>
-    );  
-  }
+  return (
+    <ApolloProvider client={client(token)}>
+      <MuiThemeProvider theme={theme}>
+          <Header />
+          <main style={{ margin: 64, paddingTop: '1rem' }}>
+            <Switch/>
+          </main>
+      </MuiThemeProvider>
+    </ApolloProvider>
+  );  
 }
-
-export default App;
